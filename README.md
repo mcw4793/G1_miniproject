@@ -9,7 +9,7 @@
 | Group | G1 |
 | Members | [문채원(Leader)], [옥예서], [고나연], [탁서영] |
 | README editor | [옥예서] |
-| Date & Time | 10/22, [13:00] – [end time] |
+| Date & Time | 10/22, [13:00] – [15:35] |
 | Location | [Room 334] |
 
 ---
