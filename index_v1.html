@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Quest: Hero of Vocab (보캡의 용사)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: medieval & clean gaming fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+KR:wght@400;600;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <!-- FontAwesome for RPG Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans KR"', 'sans-serif'],
+            rpg: ['"Cinzel"', 'serif'],
+            pixel: ['"Press Start 2P"', 'monospace']
+          },
+          colors: {
+            rpg: {
+              gold: '#ffd166',
+              darkgold: '#c99a2c',
+              wood: '#2b1d0c',
+              parchment: '#fdf6e2',
+              parchmentDark: '#f4ebd0',
+              ruby: '#ef476f',
+              emerald: '#06d6a0',
+              mana: '#118ab2',
+              night: '#0e131f'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Fantasy UI Styling */
+    body {
+      background: radial-gradient(circle at 50% 20%, #1f2a44 0%, #0d111a 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    .rpg-border {
+      border: 4px solid #c99a2c;
+      box-shadow: 0 0 0 2px #543d11, inset 0 0 12px rgba(0,0,0,0.25), 0 8px 24px rgba(0,0,0,0.6);
+    }
+    .rpg-panel {
+      background-color: #fdf6e2;
+      border-radius: 1rem;
+      border: 3px solid #d4af37;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), inset 0 1px 2px #fff;
+    }
+    .rpg-btn {
+      transition: all 0.15s ease-in-out;
+      box-shadow: 0 5px 0 #8c6418, 0 8px 12px rgba(0,0,0,0.4);
+    }
+    .rpg-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0 #8c6418, 0 10px 16px rgba(0,0,0,0.45);
+    }
+    .rpg-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #8c6418, 0 4px 6px rgba(0,0,0,0.4);
+    }
+    .rpg-btn-red {
+      box-shadow: 0 5px 0 #8d1933, 0 8px 12px rgba(0,0,0,0.4);
+    }
+    .rpg-btn-red:hover {
+      box-shadow: 0 7px 0 #8d1933, 0 10px 16px rgba(0,0,0,0.45);
+    }
+    .rpg-btn-red:active {
+      box-shadow: 0 2px 0 #8d1933;
+    }
+    .glow-gold {
+      text-shadow: 0 0 12px rgba(255, 215, 0, 0.8), 0 0 2px #000;
+    }
+    /* Battle Animations */
+    @keyframes heroSlash {
+      0% { transform: scale(1) translateX(0); }
+      35% { transform: scale(1.15) translateX(35px) rotate(8deg); }
+      70% { transform: scale(1.05) translateX(20px); }
+      100% { transform: scale(1) translateX(0); }
+    }
+    @keyframes monsterShake {
+      0%, 100% { transform: translateX(0); filter: drop-shadow(0 0 0 red); }
+      20%, 60% { transform: translateX(-15px) rotate(-6deg); filter: brightness(2) drop-shadow(0 0 15px red); }
+      40%, 80% { transform: translateX(15px) rotate(6deg); }
+    }
+    @keyframes heroHurt {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-12px); filter: brightness(2) drop-shadow(0 0 12px red); }
+      40%, 80% { transform: translateX(12px); }
+    }
+    @keyframes floatEffect {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .animate-slash { animation: heroSlash 0.45s ease-out; }
+    .animate-shake { animation: monsterShake 0.45s ease-out; }
+    .animate-hurt { animation: heroHurt 0.45s ease-out; }
+    .animate-float { animation: floatEffect 2.8s ease-in-out infinite; }
+    
+    /* Damage popup */
+    @keyframes popupFade {
+      0% { opacity: 0; transform: translateY(0) scale(0.6); }
+      40% { opacity: 1; transform: translateY(-24px) scale(1.25); }
+      100% { opacity: 0; transform: translateY(-48px) scale(1); }
+    }
+    .dmg-popup {
+      position: absolute;
+      animation: popupFade 0.9s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+      pointer-events: none;
+      font-weight: 900;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased select-none text-slate-800 pb-12">
+
+  <!-- TOP STATUS BAR: Hero Stats & Sound Toggle -->
+  <header class="sticky top-0 z-50 bg-slate-900/90 backdrop-blur border-b-2 border-rpg-darkgold shadow-lg px-4 py-2 text-white">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <!-- Hero Mini Info -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-400 border-2 border-yellow-200 flex items-center justify-center shadow-md">
+          <i class="fa-solid fa-shield-halved text-white text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-rpg font-bold text-rpg-gold text-sm tracking-wider">용사 K7</span>
+            <span id="headerLevelBadge" class="bg-amber-500 text-slate-900 text-xs px-2 py-0.5 rounded-full font-bold">Lv. 1</span>
+          </div>
+          <!-- Hero HP bar -->
+          <div class="flex items-center space-x-1.5 mt-0.5">
+            <i class="fa-solid fa-heart text-rose-500 text-xs"></i>
+            <div class="w-24 sm:w-32 bg-slate-700 h-2.5 rounded-full overflow-hidden border border-slate-600">
+              <div id="headerHpBar" class="bg-rose-500 h-full transition-all duration-300" style="width: 100%;"></div>
+            </div>
+            <span id="headerHpText" class="text-[10px] text-slate-300 font-mono">100/100</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXP & Gold & Audio Controls -->
+      <div class="flex items-center space-x-3 sm:space-x-4">
+        <!-- EXP bar -->
+        <div class="hidden sm:block text-right">
+          <div class="text-[11px] text-amber-200 font-mono">EXP <span id="headerExpText">0/100</span></div>
+          <div class="w-24 bg-slate-700 h-2 rounded-full overflow-hidden border border-slate-600">
+            <div id="headerExpBar" class="bg-amber-400 h-full transition-all duration-300" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Audio mute button -->
+        <button id="soundToggleBtn" onclick="toggleSound()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 flex items-center justify-center text-amber-400 text-sm">
+          <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+        </button>
+
+        <!-- Home/Map button -->
+        <button onclick="goToStageSelect()" class="px-3 py-1 bg-gradient-to-b from-amber-500 to-amber-700 text-white text-xs font-bold rounded-lg border border-yellow-300 shadow hover:brightness-110 flex items-center space-x-1">
+          <i class="fa-solid fa-map"></i>
+          <span class="hidden sm:inline">월드맵</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="max-w-4xl mx-auto px-4 mt-6">
+
+    <!-- SCREEN 1: MAP / STAGE SELECTOR -->
+    <section id="screenMap" class="space-y-6">
+      <!-- Title Banner -->
+      <div class="text-center space-y-2 py-4">
+        <span class="bg-amber-400/20 text-amber-300 text-xs px-3 py-1 rounded-full border border-amber-400/40 font-mono">
+          중학교 1학년(K7) 필수 어휘 마스터 모험
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-rpg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-amber-400 to-yellow-500 tracking-wider glow-gold">
+          WORD QUEST : HERO OF VOCAB
+        </h1>
+        <p class="text-slate-300 text-sm max-w-lg mx-auto">
+          단어 플래시카드, 퀴즈, 영타 연습, 그리고 보스 타임어택 배틀로 10개 핵심 영단어를 완전 정복하세요!
+        </p>
+      </div>
+
+      <!-- Stages Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Stage 1 -->
+        <div class="rpg-panel p-5 relative overflow-hidden flex flex-col justify-between hover:shadow-2xl transition border-emerald-600 border-4">
+          <div class="absolute -top-3 -right-3 bg-emerald-600 text-white text-xs px-4 py-1.5 rounded-bl-xl font-bold shadow">
+            STAGE 1
+          </div>
+          <div>
+            <div class="text-emerald-700 text-4xl mb-3 text-center">
+              <i class="fa-solid fa-tree animate-float"></i>
+            </div>
+            <h3 class="font-rpg font-bold text-xl text-slate-900 text-center">탐색의 숲</h3>
+            <p class="text-xs text-slate-600 text-center mb-3">Forest of Discovery (Set 1)</p>
+            <div class="bg-white/80 p-2.5 rounded-lg border border-emerald-200 text-xs text-slate-700 space-y-1 mb-4">
+              <div class="font-bold text-emerald-800">🎯 대상 단어 (5개):</div>
+              <div class="flex flex-wrap gap-1 font-mono text-[11px]">
+                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">act (*)</span>
+                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">leave (**)</span>
+                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">produce (**)</span>
+                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">subject (**)</span>
+                <span class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">mind (*)</span>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <button onclick="startStage(1, 'study')" class="w-full py-2.5 bg-gradient-to-b from-emerald-500 to-emerald-700 text-white font-bold rounded-xl rpg-btn text-sm flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-book-open"></i>
+              <span>단어 탐구 (5 Encounters)</span>
+            </button>
+            <button onclick="startStage(1, 'battle')" class="w-full py-2 bg-gradient-to-b from-amber-500 to-amber-700 text-white font-bold rounded-xl rpg-btn text-xs flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-shield-virus"></i>
+              <span>슬라임 숲 정화전 (퀴즈 배틀)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stage 2 -->
+        <div class="rpg-panel p-5 relative overflow-hidden flex flex-col justify-between hover:shadow-2xl transition border-sky-600 border-4">
+          <div class="absolute -top-3 -right-3 bg-sky-600 text-white text-xs px-4 py-1.5 rounded-bl-xl font-bold shadow">
+            STAGE 2
+          </div>
+          <div>
+            <div class="text-sky-700 text-4xl mb-3 text-center">
+              <i class="fa-solid fa-dungeon animate-float"></i>
+            </div>
+            <h3 class="font-rpg font-bold text-xl text-slate-900 text-center">시련의 동굴</h3>
+            <p class="text-xs text-slate-600 text-center mb-3">Cave of Trials (Set 2)</p>
+            <div class="bg-white/80 p-2.5 rounded-lg border border-sky-200 text-xs text-slate-700 space-y-1 mb-4">
+              <div class="font-bold text-sky-800">🎯 대상 단어 (5개):</div>
+              <div class="flex flex-wrap gap-1 font-mono text-[11px]">
+                <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">delight (**)</span>
+                <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">confide</span>
+                <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">satisfy (**)</span>
+                <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">embarrass (**)</span>
+                <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">frustrate (**)</span>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <button onclick="startStage(2, 'study')" class="w-full py-2.5 bg-gradient-to-b from-sky-500 to-sky-700 text-white font-bold rounded-xl rpg-btn text-sm flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-book-open"></i>
+              <span>단어 탐구 (5 Encounters)</span>
+            </button>
+            <button onclick="startStage(2, 'battle')" class="w-full py-2 bg-gradient-to-b from-amber-500 to-amber-700 text-white font-bold rounded-xl rpg-btn text-xs flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>고블린 동굴 토벌전 (퀴즈 배틀)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stage 3 (Final Boss) -->
+        <div class="rpg-panel p-5 relative overflow-hidden flex flex-col justify-between hover:shadow-2xl transition border-rose-600 border-4">
+          <div class="absolute -top-3 -right-3 bg-rose-600 text-white text-xs px-4 py-1.5 rounded-bl-xl font-bold shadow">
+            FINAL BOSS
+          </div>
+          <div>
+            <div class="text-rose-600 text-4xl mb-3 text-center">
+              <i class="fa-solid fa-dragon animate-bounce"></i>
+            </div>
+            <h3 class="font-rpg font-bold text-xl text-slate-900 text-center">마왕의 탑</h3>
+            <p class="text-xs text-slate-600 text-center mb-3">Demon King's Tower (All 10)</p>
+            <div class="bg-white/80 p-2.5 rounded-lg border border-rose-200 text-xs text-slate-700 space-y-1 mb-4">
+              <div class="font-bold text-rose-800">🔥 타임어택 최종 인출 평가:</div>
+              <p class="text-[11px] leading-relaxed">
+                전체 10단어 랜덤 출제! 제한 시간(12초) 안에 정답을 맞춰 마왕 드래곤을 물리치세요!
+              </p>
+            </div>
+          </div>
+          <button onclick="startBossBattle()" class="w-full py-3 bg-gradient-to-b from-rose-600 to-red-800 text-white font-bold rounded-xl rpg-btn-red text-sm flex items-center justify-center space-x-2 shadow-lg">
+            <i class="fa-solid fa-fire"></i>
+            <span>마왕전 결전 시작 (10단어 종합)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Review Sanctuary Banner -->
+      <div class="bg-gradient-to-r from-slate-800 via-indigo-950 to-slate-800 rounded-2xl p-4 sm:p-6 border-2 border-amber-400/60 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+          <div class="w-14 h-14 rounded-2xl bg-amber-400/20 border border-amber-400 flex items-center justify-center text-amber-300 text-2xl flex-shrink-0">
+            <i class="fa-solid fa-scroll"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-amber-300 text-base sm:text-lg">기억의 성소 (Word Bank & 오답 노트)</h4>
+            <p class="text-xs text-slate-300">
+              10개 단어의 상세 정보(어족, 학교급 레벨 별표, 예문)와 틀린 문제를 즉시 복습할 수 있습니다.
+            </p>
+          </div>
+        </div>
+        <button onclick="openWordBank()" class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-b from-indigo-500 to-indigo-700 hover:brightness-110 text-white font-bold text-sm rounded-xl border border-indigo-300 shadow">
+          단어 도감 열기
+        </button>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: 5-ENCOUNTER STEP-BY-STEP LEARNING -->
+    <section id="screenStudy" class="hidden space-y-5">
+      <!-- Top Stage Breadcrumb -->
+      <div class="flex items-center justify-between text-slate-300 text-xs">
+        <div class="flex items-center space-x-2 font-mono">
+          <span id="studyStageName" class="text-amber-400 font-bold">STAGE 1</span>
+          <span>•</span>
+          <span id="studyStepIndicator" class="bg-amber-400/20 px-2 py-0.5 rounded text-amber-300">활동 1/5: 플래시카드</span>
+        </div>
+        <button onclick="goToStageSelect()" class="text-slate-400 hover:text-white flex items-center space-x-1">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>나가기</span>
+        </button>
+      </div>
+
+      <!-- Activity 1: Flashcard Encounter -->
+      <div id="activityFlashcard" class="study-activity hidden">
+        <div class="rpg-panel p-6 sm:p-8 max-w-xl mx-auto text-center relative">
+          <!-- Star Level Badge -->
+          <div id="fcLevelBadge" class="absolute top-4 left-4 bg-amber-500 text-slate-900 text-xs font-black px-2.5 py-1 rounded-md shadow">
+            **
+          </div>
+          <!-- Word Counter -->
+          <div class="absolute top-4 right-4 text-xs font-mono text-slate-500 font-bold">
+            <span id="fcCurrentIndex">1</span> / 5
+          </div>
+
+          <!-- Pronunciation & Word -->
+          <div class="my-6">
+            <div class="flex items-center justify-center space-x-3 mb-2">
+              <h2 id="fcWord" class="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-wide font-sans">
+                produce
+              </h2>
+              <button onclick="speakCurrentWord()" class="w-10 h-10 rounded-full bg-amber-200 hover:bg-amber-300 text-amber-900 flex items-center justify-center text-lg shadow transition" title="발음 듣기">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
+            </div>
+            <!-- Word Family Badge -->
+            <div id="fcWordFamily" class="inline-block bg-purple-100 text-purple-800 text-xs px-2.5 py-1 rounded-full font-medium mt-1">
+              Word family: <span class="font-bold">actual, interact</span>
+            </div>
+          </div>
+
+          <!-- Meaning Box -->
+          <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 my-4">
+            <p class="text-xs text-amber-800 font-bold mb-1">한국어 뜻</p>
+            <p id="fcMeaning" class="text-2xl font-bold text-amber-950">생산하다</p>
+          </div>
+
+          <!-- Example Sentence with Highlight -->
+          <div class="bg-white border border-slate-200 rounded-xl p-4 text-left my-4 shadow-sm">
+            <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+              <span class="font-bold text-slate-700">📖 예문 (Example Sentence)</span>
+              <button onclick="speakCurrentExample()" class="text-amber-700 hover:text-amber-900 text-xs">
+                <i class="fa-solid fa-volume-high mr-1"></i>예문 듣기
+              </button>
+            </div>
+            <p id="fcSentence" class="text-base sm:text-lg text-slate-800 font-medium leading-relaxed">
+              The company <span class="text-rose-600 font-bold underline decoration-2">produces</span> cars.
+            </p>
+          </div>
+
+          <!-- Flashcard Navigation Buttons -->
+          <div class="flex items-center justify-between mt-6 pt-4 border-t border-amber-200">
+            <button id="fcPrevBtn" onclick="prevFlashcard()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-sm">
+              <i class="fa-solid fa-chevron-left mr-1"></i> 이전 단어
+            </button>
+            <button id="fcNextBtn" onclick="nextFlashcard()" class="px-6 py-2.5 bg-gradient-to-b from-amber-500 to-amber-700 text-white font-bold rounded-xl rpg-btn text-sm">
+              다음 단어 <i class="fa-solid fa-chevron-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity 2: Meaning Quiz (Multiple Choice) -->
+      <div id="activityMeaningQuiz" class="study-activity hidden">
+        <div class="rpg-panel p-6 sm:p-8 max-w-xl mx-auto">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Encounter 2 • 객관식 뜻 맞히기</span>
+            <span id="mqProgress" class="font-mono text-xs text-slate-500 font-bold">1/5</span>
+          </div>
+          <div class="text-center my-4">
+            <span class="text-xs text-slate-500">다음 단어의 올바른 한국어 뜻은 무엇일까요?</span>
+            <div class="flex items-center justify-center space-x-2 mt-2">
+              <h3 id="mqWord" class="text-3xl sm:text-4xl font-extrabold text-slate-900">produce</h3>
+              <button onclick="speakWord(currentQuizItem.word)" class="text-amber-700 hover:text-amber-900 text-base">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
+            </div>
+          </div>
+          <!-- 4 Multiple choice options -->
+          <div id="mqOptions" class="grid grid-cols-1 gap-2.5 mt-6">
+            <!-- options inserted by js -->
+          </div>
+          <div id="mqFeedback" class="mt-4 p-3 rounded-xl hidden text-sm font-bold text-center"></div>
+        </div>
+      </div>
+
+      <!-- Activity 3: Sentence Fill-in-the-blank Quiz -->
+      <div id="activityFillBlank" class="study-activity hidden">
+        <div class="rpg-panel p-6 sm:p-8 max-w-xl mx-auto">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Encounter 3 • 예문 빈칸 채우기</span>
+            <span id="fbProgress" class="font-mono text-xs text-slate-500 font-bold">1/5</span>
+          </div>
+          <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 text-center my-4">
+            <span class="text-xs text-amber-700 font-bold">목표 단어의 뜻</span>
+            <p id="fbMeaningHint" class="text-xl font-extrabold text-amber-950 mt-1">생산하다</p>
+          </div>
+          <div class="bg-white border border-slate-300 rounded-xl p-5 my-4 text-center shadow-inner">
+            <p id="fbSentenceText" class="text-lg sm:text-xl font-medium text-slate-800 leading-relaxed font-sans">
+              The company [ _____ ] cars.
+            </p>
+          </div>
+          <div id="fbOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-5">
+            <!-- options inserted by js -->
+          </div>
+          <div id="fbFeedback" class="mt-4 p-3 rounded-xl hidden text-sm font-bold text-center"></div>
+        </div>
+      </div>
+
+      <!-- Activity 4: Word Matching / Reverse Meaning -->
+      <div id="activityReverseQuiz" class="study-activity hidden">
+        <div class="rpg-panel p-6 sm:p-8 max-w-xl mx-auto">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Encounter 4 • 뜻 보고 단어 고르기</span>
+            <span id="rqProgress" class="font-mono text-xs text-slate-500 font-bold">1/5</span>
+          </div>
+          <div class="text-center my-4">
+            <span class="text-xs text-slate-500">제시된 뜻에 해당하는 영단어를 고르세요</span>
+            <h3 id="rqMeaning" class="text-3xl font-extrabold text-slate-900 mt-2">생산하다</h3>
+          </div>
+          <div id="rqOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+            <!-- options inserted by js -->
+          </div>
+          <div id="rqFeedback" class="mt-4 p-3 rounded-xl hidden text-sm font-bold text-center"></div>
+        </div>
+      </div>
+
+      <!-- Activity 5: Word Typing Practice (Spelling) -->
+      <div id="activityTyping" class="study-activity hidden">
+        <div class="rpg-panel p-6 sm:p-8 max-w-xl mx-auto text-center">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Encounter 5 • 철자 쓰기 훈련 (Typing)</span>
+            <span id="tpProgress" class="font-mono text-xs text-slate-500 font-bold">1/5</span>
+          </div>
+          <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 my-4">
+            <span class="text-xs text-amber-800 font-bold">한국어 뜻</span>
+            <p id="tpMeaning" class="text-2xl font-bold text-amber-950 mt-1">생산하다</p>
+          </div>
+          <div class="text-xs text-slate-600 mb-2">
+            힌트 글자 수: <span id="tpLengthHint" class="font-bold text-amber-700 font-mono tracking-widest">_ _ _ _ _ _ _</span>
+          </div>
+          <!-- Typing Form -->
+          <form onsubmit="handleTypingSubmit(event)" class="mt-4 space-y-4">
+            <input 
+              type="text" 
+              id="tpInput" 
+              autocomplete="off" 
+              autocapitalize="off" 
+              spellcheck="false" 
+              placeholder="스펠링을 직접 입력하세요" 
+              class="w-full text-center text-2xl font-bold font-mono tracking-wider py-3 px-4 border-2 border-amber-400 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-300 bg-white"
+            >
+            <div class="flex space-x-2">
+              <button type="button" onclick="revealLetterHint()" class="flex-1 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl">
+                <i class="fa-solid fa-lightbulb text-amber-600 mr-1"></i> 철자 힌트 보기
+              </button>
+              <button type="submit" class="flex-1 py-2.5 bg-gradient-to-b from-amber-500 to-amber-700 text-white font-bold text-sm rounded-xl rpg-btn">
+                확인 (Enter)
+              </button>
+            </div>
+          </form>
+          <div id="tpFeedback" class="mt-4 p-3 rounded-xl hidden text-sm font-bold text-center"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 3: RPG BATTLE ARENA (Timed / Monster Battle) -->
+    <section id="screenBattle" class="hidden space-y-5">
+      <!-- Arena Box -->
+      <div class="relative bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 border-4 border-rpg-darkgold rounded-2xl shadow-2xl overflow-hidden p-4 sm:p-6 min-h-[340px] flex flex-col justify-between">
+        
+        <!-- Battle Header & Timer -->
+        <div class="flex items-center justify-between text-white z-10">
+          <div class="flex items-center space-x-2">
+            <span id="battleModeBadge" class="bg-amber-500 text-slate-900 text-xs font-bold px-2.5 py-0.5 rounded-full font-mono uppercase">
+              BATTLE
+            </span>
+            <span id="battleEnemyName" class="font-rpg font-bold text-amber-200 text-sm">
+              숲의 슬라임 몬스터
+            </span>
+          </div>
+
+          <!-- Turn Timer (Timed Vocabulary Battle) -->
+          <div id="battleTimerContainer" class="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-600">
+            <i class="fa-solid fa-stopwatch text-amber-400 animate-pulse"></i>
+            <span class="text-xs text-slate-300">시간:</span>
+            <span id="battleTimerText" class="font-mono text-base font-bold text-amber-300">12s</span>
+            <div class="w-16 bg-slate-700 h-2 rounded-full overflow-hidden">
+              <div id="battleTimerBar" class="bg-amber-400 h-full transition-all duration-100" style="width: 100%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Battlefield Sprites & FX -->
+        <div class="relative flex items-center justify-around py-4 my-auto">
+          <!-- Hero Sprite -->
+          <div id="battleHeroWrapper" class="text-center relative">
+            <div id="heroDamagePopupContainer"></div>
+            <div id="heroSprite" class="w-24 h-24 sm:w-28 sm:h-28 mx-auto flex items-center justify-center transition-transform">
+              <!-- SVG Knight Hero -->
+              <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+                <!-- Shield & Body -->
+                <circle cx="50" cy="50" r="42" fill="#2563eb" stroke="#ffd166" stroke-width="4"/>
+                <path d="M50 15 L78 30 V60 C78 78 50 88 50 88 C50 88 22 78 22 60 V30 Z" fill="#1d4ed8" stroke="#fcd34d" stroke-width="3"/>
+                <!-- Helmet visor -->
+                <rect x="36" y="38" width="28" height="8" rx="4" fill="#0f172a"/>
+                <rect x="40" y="40" width="20" height="4" rx="2" fill="#38bdf8"/>
+                <!-- Sword icon on top -->
+                <path d="M47 52 L53 52 L53 72 L47 72 Z" fill="#ffd166"/>
+                <path d="M42 56 L58 56 L50 48 Z" fill="#f8fafc"/>
+              </svg>
+            </div>
+            <div class="mt-2 text-white font-bold text-xs bg-slate-800/80 px-2 py-0.5 rounded-full inline-block border border-slate-600">
+              용사 K7 (HP <span id="heroBattleHp">100</span>)
+            </div>
+          </div>
+
+          <!-- VS Badge -->
+          <div class="text-amber-400 font-rpg font-black text-xl italic opacity-75">
+            VS
+          </div>
+
+          <!-- Monster Sprite -->
+          <div id="battleMonsterWrapper" class="text-center relative">
+            <div id="monsterDamagePopupContainer"></div>
+            <div id="monsterSprite" class="w-24 h-24 sm:w-28 sm:h-28 mx-auto flex items-center justify-center transition-transform">
+              <!-- Dynamic Monster SVG placeholder -->
+              <div id="monsterSvgHolder" class="w-full h-full"></div>
+            </div>
+            <div class="mt-2 text-white font-bold text-xs bg-slate-800/80 px-2 py-0.5 rounded-full inline-block border border-slate-600">
+              <span id="monsterHpLabel">HP 100/100</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monster HP Bar -->
+        <div class="w-full bg-slate-800/90 rounded-full h-3 border border-red-900/60 overflow-hidden relative shadow-inner">
+          <div id="battleMonsterHpBar" class="bg-gradient-to-r from-red-600 to-rose-400 h-full transition-all duration-300" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Question Box for Battle -->
+      <div class="rpg-panel p-5 sm:p-6 text-center">
+        <div class="text-xs text-amber-800 font-bold uppercase tracking-wider mb-1">
+          <span id="battleQCount">문제 1/5</span> • 몬스터 공격 퀴즈
+        </div>
+        <p id="battleQuestionPrompt" class="text-xl sm:text-2xl font-extrabold text-slate-900 my-2">
+          "생산하다"의 알맞은 영어 단어는?
+        </p>
+        <p id="battleSubPrompt" class="text-xs text-slate-500 mb-4 hidden font-mono">
+          예문: The company [ _____ ] cars.
+        </p>
+
+        <!-- Battle Multiple Choice Options -->
+        <div id="battleOptionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 4: VICTORY & SUMMARY MODAL -->
+    <div id="modalVictory" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div class="rpg-panel max-w-lg w-full p-6 text-center relative animate-float">
+        <div class="w-20 h-20 mx-auto -mt-14 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-full border-4 border-white flex items-center justify-center shadow-xl text-white text-3xl">
+          <i class="fa-solid fa-trophy"></i>
+        </div>
+        <h2 id="vicTitle" class="text-3xl font-rpg font-extrabold text-slate-900 mt-3 glow-gold">승리 (VICTORY)!</h2>
+        <p id="vicSubtitle" class="text-xs text-slate-600 mt-1">숲의 몬스터를 물리치고 지혜를 획득했습니다!</p>
+
+        <!-- Stats Breakdown -->
+        <div class="grid grid-cols-3 gap-2 my-5 text-center">
+          <div class="bg-amber-100/80 p-2.5 rounded-xl border border-amber-300">
+            <span class="text-[10px] text-amber-800 font-bold block">획득 경험치</span>
+            <span id="vicExpGained" class="text-lg font-mono font-extrabold text-amber-900">+50 EXP</span>
+          </div>
+          <div class="bg-emerald-100/80 p-2.5 rounded-xl border border-emerald-300">
+            <span class="text-[10px] text-emerald-800 font-bold block">정답률</span>
+            <span id="vicAccuracy" class="text-lg font-mono font-extrabold text-emerald-900">100%</span>
+          </div>
+          <div class="bg-indigo-100/80 p-2.5 rounded-xl border border-indigo-300">
+            <span class="text-[10px] text-indigo-800 font-bold block">학습 단어 수</span>
+            <span id="vicWordCount" class="text-lg font-mono font-extrabold text-indigo-900">5 Words</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <button onclick="closeVictoryModal()" class="w-full py-3 bg-gradient-to-b from-amber-500 to-amber-700 text-white font-bold rounded-xl rpg-btn text-sm">
+            다음 모험 계속하기
+          </button>
+          <button onclick="closeVictoryModal(); openWordBank();" class="w-full py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs">
+            단어 도감 & 오답 확인하기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: WORD BANK & REVIEW SANCTUARY (오답노트 & 도감) -->
+    <div id="modalWordBank" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div class="rpg-panel max-w-3xl w-full p-5 sm:p-6 max-h-[90vh] flex flex-col relative">
+        <div class="flex items-center justify-between pb-3 border-b border-amber-300">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-book-bookmark text-amber-600 text-xl"></i>
+            <h3 class="font-rpg font-bold text-lg text-slate-900">기억의 성소 (Word Bank & Review)</h3>
+          </div>
+          <button onclick="closeWordBank()" class="w-8 h-8 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Filter tabs: All 10 words vs Incorrect review notes -->
+        <div class="flex space-x-2 my-3">
+          <button id="tabAllWords" onclick="switchWordBankTab('all')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-900">
+            전체 단어 10개
+          </button>
+          <button id="tabWrongWords" onclick="switchWordBankTab('wrong')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-200 text-slate-700 flex items-center space-x-1">
+            <span>오답 복습 노트</span>
+            <span id="wrongCountBadge" class="bg-rose-500 text-white rounded-full px-1.5 py-0.2 text-[10px]">0</span>
+          </button>
+        </div>
+
+        <!-- Word List Container -->
+        <div id="wordBankList" class="overflow-y-auto space-y-3 pr-1 flex-1">
+          <!-- Dynamically populated cards -->
+        </div>
+
+        <!-- Bottom Action -->
+        <div class="pt-3 mt-2 border-t border-amber-200 flex justify-between items-center text-xs text-slate-500">
+          <span>* = 중학교 기초 권장 어휘, ** = 필수 핵심 어휘</span>
+          <button onclick="closeWordBank()" class="px-4 py-2 bg-slate-800 text-white rounded-lg font-bold text-xs hover:bg-slate-700">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    /* =========================================================================
+       1. DATA STRUCTURE: 10 Target Words for K7 Learners (Webb 2007, Nakata 2021)
+       ========================================================================= */
+    const VOCAB_DATA = [
+      {
+        id: 1,
+        word: 'act',
+        meaning: '행동하다',
+        level: '*',
+        wordFamily: 'actual, interact',
+        sentence: 'They acted quickly to help.',
+        sentenceTarget: 'acted',
+        blankSentence: 'They [ _____ ] quickly to help.',
+        distractors: ['떠나다', '생산하다', '만족시키다'],
+        set: 1
+      },
+      {
+        id: 2,
+        word: 'leave',
+        meaning: '떠나다',
+        level: '**',
+        wordFamily: null,
+        sentence: 'She left the room quietly.',
+        sentenceTarget: 'left',
+        blankSentence: 'She [ _____ ] the room quietly.',
+        distractors: ['행동하다', '주제', '털어놓다'],
+        set: 1
+      },
+      {
+        id: 3,
+        word: 'produce',
+        meaning: '생산하다',
+        level: '**',
+        wordFamily: null,
+        sentence: 'The company produces cars.',
+        sentenceTarget: 'produces',
+        blankSentence: 'The company [ _____ ] cars.',
+        distractors: ['기쁘게 하다', '좌절시키다', '생각'],
+        set: 1
+      },
+      {
+        id: 4,
+        word: 'subject',
+        meaning: '주제 / 과목',
+        level: '**',
+        wordFamily: 'subjective',
+        sentence: 'English is my favorite subject.',
+        sentenceTarget: 'subject',
+        blankSentence: 'English is my favorite [ _____ ].',
+        distractors: ['당황하게 하다', '떠나다', '털어놓다'],
+        set: 1
+      },
+      {
+        id: 5,
+        word: 'mind',
+        meaning: '마음 / 생각',
+        level: '*',
+        wordFamily: null,
+        sentence: 'Keep this idea in mind.',
+        sentenceTarget: 'mind',
+        blankSentence: 'Keep this idea in [ _____ ].',
+        distractors: ['행동하다', '만족시키다', '생산하다'],
+        set: 1
+      },
+      {
+        id: 6,
+        word: 'delight',
+        meaning: '기쁘게 하다',
+        level: '**',
+        wordFamily: null,
+        sentence: 'The gift delighted her.',
+        sentenceTarget: 'delighted',
+        blankSentence: 'The gift [ _____ ] her.',
+        distractors: ['좌절시키다', '당황하게 하다', '떠나다'],
+        set: 2
+      },
+      {
+        id: 7,
+        word: 'confide',
+        meaning: '털어놓다',
+        level: '',
+        wordFamily: 'confident',
+        sentence: 'I confide in my friend.',
+        sentenceTarget: 'confide',
+        blankSentence: 'I [ _____ ] in my friend.',
+        distractors: ['생산하다', '마음', '행동하다'],
+        set: 2
+      },
+      {
+        id: 8,
+        word: 'satisfy',
+        meaning: '만족시키다',
+        level: '**',
+        wordFamily: null,
+        sentence: 'The food satisfies me.',
+        sentenceTarget: 'satisfies',
+        blankSentence: 'The food [ _____ ] me.',
+        distractors: ['좌절시키다', '떠나다', '주제'],
+        set: 2
+      },
+      {
+        id: 9,
+        word: 'embarrass',
+        meaning: '당황하게 하다',
+        level: '**',
+        wordFamily: null,
+        sentence: 'His joke embarrassed me.',
+        sentenceTarget: 'embarrassed',
+        blankSentence: 'His joke [ _____ ] me.',
+        distractors: ['기쁘게 하다', '털어놓다', '행동하다'],
+        set: 2
+      },
+      {
+        id: 10,
+        word: 'frustrate',
+        meaning: '좌절시키다',
+        level: '**',
+        wordFamily: null,
+        sentence: 'The difficult test frustrated me.',
+        sentenceTarget: 'frustrated',
+        blankSentence: 'The difficult test [ _____ ] me.',
+        distractors: ['만족시키다', '기쁘게 하다', '생산하다'],
+        set: 2
+      }
+    ];
+
+    /* =========================================================================
+       2. WEB AUDIO API SYNTHESIS (Clean RPG Sound Effects)
+       ========================================================================= */
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playRpgSound(type) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const ctx = audioCtx;
+        const now = ctx.currentTime;
+
+        if (type === 'hit') {
+          // Sword slash hit
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(60, now + 0.2);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.22);
+        } else if (type === 'correct') {
+          // Bright positive chime
+          const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+            gain.gain.setValueAtTime(0.2, now + idx * 0.07);
+            gain.gain.linearRampToValueAtTime(0.001, now + idx * 0.07 + 0.25);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.07);
+            osc.stop(now + idx * 0.07 + 0.26);
+          });
+        } else if (type === 'wrong') {
+          // Low buzzing thud
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.linearRampToValueAtTime(80, now + 0.25);
+          gain.gain.setValueAtTime(0.35, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.26);
+        } else if (type === 'levelup') {
+          // Fanfare
+          const fanfare = [440, 554, 659, 880];
+          fanfare.forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, now + i * 0.12);
+            gain.gain.setValueAtTime(0.25, now + i * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + i * 0.12);
+            osc.stop(now + i * 0.12 + 0.45);
+          });
+        }
+      } catch (e) {
+        console.warn('Audio play error', e);
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('soundIcon');
+      if (soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high';
+        playRpgSound('correct');
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark';
+      }
+    }
+
+    /* Speech synthesis pronunciation */
+    function speakWord(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.85; // slightly slower for K7 learners
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    /* =========================================================================
+       3. GAME STATE (Hero stats, stages, incorrect words)
+       ========================================================================= */
+    const gameState = {
+      hero: {
+        level: 1,
+        exp: 0,
+        maxExp: 100,
+        hp: 100,
+        maxHp: 100
+      },
+      wrongWords: new Set(), // set of word IDs
+      currentStage: 1,
+      currentSetWords: [],
+      // Encounter progress: 0: Flashcard, 1: Meaning Quiz, 2: FillBlank, 3: ReverseQuiz, 4: Typing
+      encounterStep: 0,
+      encounterItemIndex: 0,
+      // Flashcard index
+      fcIndex: 0,
+      // Battle state
+      battle: {
+        active: false,
+        isBoss: false,
+        monsterHp: 100,
+        maxMonsterHp: 100,
+        currentQIndex: 0,
+        questions: [],
+        timer: null,
+        timeLeft: 12,
+        correctCount: 0
+      }
+    };
+
+    /* EXP & Level Up */
+    function gainHeroExp(amount) {
+      gameState.hero.exp += amount;
+      if (gameState.hero.exp >= gameState.hero.maxExp) {
+        gameState.hero.level++;
+        gameState.hero.exp -= gameState.hero.maxExp;
+        gameState.hero.maxExp = Math.floor(gameState.hero.maxExp * 1.3);
+        gameState.hero.maxHp += 15;
+        gameState.hero.hp = gameState.hero.maxHp;
+        playRpgSound('levelup');
+      }
+      updateHeaderStats();
+    }
+
+    function updateHeaderStats() {
+      document.getElementById('headerLevelBadge').innerText = `Lv. ${gameState.hero.level}`;
+      const hpPct = Math.max(0, (gameState.hero.hp / gameState.hero.maxHp) * 100);
+      document.getElementById('headerHpBar').style.width = `${hpPct}%`;
+      document.getElementById('headerHpText').innerText = `${gameState.hero.hp}/${gameState.hero.maxHp}`;
+      
+      const expPct = Math.min(100, (gameState.hero.exp / gameState.hero.maxExp) * 100);
+      document.getElementById('headerExpBar').style.width = `${expPct}%`;
+      document.getElementById('headerExpText').innerText = `${gameState.hero.exp}/${gameState.hero.maxExp}`;
+    }
+
+    /* Navigation */
+    function showScreen(screenId) {
+      ['screenMap', 'screenStudy', 'screenBattle'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(screenId).classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goToStageSelect() {
+      if (gameState.battle.timer) clearInterval(gameState.battle.timer);
+      showScreen('screenMap');
+    }
+
+    /* =========================================================================
+       4. 5 ENCOUNTERS LEARNING FLOW (Webb 2007)
+       ========================================================================= */
+    function startStage(stageNum, mode) {
+      initAudio();
+      gameState.currentStage = stageNum;
+      gameState.currentSetWords = VOCAB_DATA.filter(w => w.set === stageNum);
+
+      if (mode === 'study') {
+        gameState.encounterStep = 0; // Starts at 0: Flashcard
+        gameState.fcIndex = 0;
+        showScreen('screenStudy');
+        renderStudyEncounter();
+      } else if (mode === 'battle') {
+        startSetBattle(stageNum);
+      }
+    }
+
+    const ENCOUNTER_NAMES = [
+      '활동 1/5: 단어 플래시카드 (소리 & 예문)',
+      '활동 2/5: 객관식 단어 뜻 식별',
+      '활동 3/5: 문맥 빈칸 채우기',
+      '활동 4/5: 뜻 보고 단어 고르기',
+      '활동 5/5: 스펠링 철자 쓰기 훈련'
+    ];
+
+    function renderStudyEncounter() {
+      const stageName = gameState.currentStage === 1 ? 'STAGE 1: 탐색의 숲' : 'STAGE 2: 시련의 동굴';
+      document.getElementById('studyStageName').innerText = stageName;
+      document.getElementById('studyStepIndicator').innerText = ENCOUNTER_NAMES[gameState.encounterStep];
+
+      // Hide all activity blocks
+      ['activityFlashcard', 'activityMeaningQuiz', 'activityFillBlank', 'activityReverseQuiz', 'activityTyping'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+
+      if (gameState.encounterStep === 0) {
+        document.getElementById('activityFlashcard').classList.remove('hidden');
+        renderFlashcard();
+      } else if (gameState.encounterStep === 1) {
+        document.getElementById('activityMeaningQuiz').classList.remove('hidden');
+        gameState.encounterItemIndex = 0;
+        renderMeaningQuiz();
+      } else if (gameState.encounterStep === 2) {
+        document.getElementById('activityFillBlank').classList.remove('hidden');
+        gameState.encounterItemIndex = 0;
+        renderFillBlankQuiz();
+      } else if (gameState.encounterStep === 3) {
+        document.getElementById('activityReverseQuiz').classList.remove('hidden');
+        gameState.encounterItemIndex = 0;
+        renderReverseQuiz();
+      } else if (gameState.encounterStep === 4) {
+        document.getElementById('activityTyping').classList.remove('hidden');
+        gameState.encounterItemIndex = 0;
+        renderTypingPractice();
+      }
+    }
+
+    /* Activity 1: Flashcard */
+    function renderFlashcard() {
+      const wordObj = gameState.currentSetWords[gameState.fcIndex];
+      document.getElementById('fcCurrentIndex').innerText = (gameState.fcIndex + 1);
+      document.getElementById('fcWord').innerText = wordObj.word;
+      document.getElementById('fcMeaning').innerText = wordObj.meaning;
+      document.getElementById('fcLevelBadge').innerText = wordObj.level ? `Level ${wordObj.level}` : '기초';
+      
+      const wfBadge = document.getElementById('fcWordFamily');
+      if (wordObj.wordFamily) {
+        wfBadge.classList.remove('hidden');
+        wfBadge.innerHTML = `Word family: <strong class="text-purple-900">${wordObj.wordFamily}</strong>`;
+      } else {
+        wfBadge.classList.add('hidden');
+      }
+
+      // Highlight target word in sentence
+      const regex = new RegExp(`(${wordObj.sentenceTarget})`, 'gi');
+      const highlighted = wordObj.sentence.replace(regex, `<span class="text-rose-600 font-bold underline decoration-2">$1</span>`);
+      document.getElementById('fcSentence').innerHTML = highlighted;
+
+      // Button controls
+      document.getElementById('fcPrevBtn').disabled = gameState.fcIndex === 0;
+      document.getElementById('fcPrevBtn').style.opacity = gameState.fcIndex === 0 ? '0.4' : '1';
+
+      const nextBtn = document.getElementById('fcNextBtn');
+      if (gameState.fcIndex === gameState.currentSetWords.length - 1) {
+        nextBtn.innerHTML = `다음 퀴즈 도전! <i class="fa-solid fa-arrow-right ml-1"></i>`;
+      } else {
+        nextBtn.innerHTML = `다음 단어 <i class="fa-solid fa-chevron-right ml-1"></i>`;
+      }
+    }
+
+    function prevFlashcard() {
+      if (gameState.fcIndex > 0) {
+        gameState.fcIndex--;
+        renderFlashcard();
+      }
+    }
+
+    function nextFlashcard() {
+      if (gameState.fcIndex < gameState.currentSetWords.length - 1) {
+        gameState.fcIndex++;
+        renderFlashcard();
+      } else {
+        // Step 1 completed, advance to Step 2
+        playRpgSound('correct');
+        gainHeroExp(20);
+        gameState.encounterStep = 1;
+        renderStudyEncounter();
+      }
+    }
+
+    function speakCurrentWord() {
+      const wordObj = gameState.currentSetWords[gameState.fcIndex];
+      speakWord(wordObj.word);
+    }
+
+    function speakCurrentExample() {
+      const wordObj = gameState.currentSetWords[gameState.fcIndex];
+      speakWord(wordObj.sentence);
+    }
+
+    /* Activity 2: Meaning Quiz */
+    let currentQuizItem = null;
+    function renderMeaningQuiz() {
+      const wordObj = gameState.currentSetWords[gameState.encounterItemIndex];
+      currentQuizItem = wordObj;
+      document.getElementById('mqProgress').innerText = `${gameState.encounterItemIndex + 1}/${gameState.currentSetWords.length}`;
+      document.getElementById('mqWord').innerText = wordObj.word;
+      
+      const feedback = document.getElementById('mqFeedback');
+      feedback.className = 'mt-4 p-3 rounded-xl hidden text-sm font-bold text-center';
+
+      // 4 choices
+      const choices = shuffleArray([wordObj.meaning, ...wordObj.distractors]);
+      const container = document.getElementById('mqOptions');
+      container.innerHTML = '';
+      choices.forEach(ch => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full py-3 px-4 bg-white hover:bg-amber-100 border-2 border-amber-300 font-bold rounded-xl text-slate-800 transition shadow-sm text-left flex items-center justify-between';
+        btn.innerHTML = `<span>${ch}</span><i class="fa-regular fa-circle-check text-slate-300"></i>`;
+        btn.onclick = () => handleMeaningAnswer(ch, wordObj, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function handleMeaningAnswer(chosen, correctObj, btn) {
+      const feedback = document.getElementById('mqFeedback');
+      feedback.classList.remove('hidden');
+
+      if (chosen === correctObj.meaning) {
+        playRpgSound('correct');
+        gainHeroExp(8);
+        feedback.className = 'mt-4 p-3 rounded-xl text-emerald-900 bg-emerald-100 border border-emerald-400 font-bold text-center';
+        feedback.innerHTML = `✨ 정답입니다! "${correctObj.word}" = <strong>${correctObj.meaning}</strong>`;
+        setTimeout(() => {
+          advanceOrFinishEncounter(1);
+        }, 1100);
+      } else {
+        playRpgSound('wrong');
+        gameState.wrongWords.add(correctObj.id);
+        feedback.className = 'mt-4 p-3 rounded-xl text-rose-900 bg-rose-100 border border-rose-400 font-bold text-center';
+        feedback.innerHTML = `❌ 아쉬워요! 정답은 <strong>"${correctObj.meaning}"</strong> 입니다. (오답 노트 저장)`;
+        setTimeout(() => {
+          advanceOrFinishEncounter(1);
+        }, 1600);
+      }
+    }
+
+    /* Activity 3: Fill-in-the-blank Quiz */
+    function renderFillBlankQuiz() {
+      const wordObj = gameState.currentSetWords[gameState.encounterItemIndex];
+      document.getElementById('fbProgress').innerText = `${gameState.encounterItemIndex + 1}/${gameState.currentSetWords.length}`;
+      document.getElementById('fbMeaningHint').innerText = wordObj.meaning;
+      document.getElementById('fbSentenceText').innerText = wordObj.blankSentence;
+
+      const feedback = document.getElementById('fbFeedback');
+      feedback.className = 'mt-4 p-3 rounded-xl hidden text-sm font-bold text-center';
+
+      // 4 word choices
+      const allOtherWords = VOCAB_DATA.filter(w => w.id !== wordObj.id).map(w => w.word);
+      const wrongWordsSample = shuffleArray(allOtherWords).slice(0, 3);
+      const choices = shuffleArray([wordObj.word, ...wrongWordsSample]);
+
+      const container = document.getElementById('fbOptions');
+      container.innerHTML = '';
+      choices.forEach(ch => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full py-3 px-4 bg-white hover:bg-amber-100 border-2 border-amber-300 font-bold rounded-xl text-slate-800 transition shadow-sm font-mono text-center text-lg';
+        btn.innerText = ch;
+        btn.onclick = () => handleFillBlankAnswer(ch, wordObj);
+        container.appendChild(btn);
+      });
+    }
+
+    function handleFillBlankAnswer(chosen, wordObj) {
+      const feedback = document.getElementById('fbFeedback');
+      feedback.classList.remove('hidden');
+
+      if (chosen.toLowerCase() === wordObj.word.toLowerCase()) {
+        playRpgSound('correct');
+        gainHeroExp(8);
+        feedback.className = 'mt-4 p-3 rounded-xl text-emerald-900 bg-emerald-100 border border-emerald-400 font-bold text-center';
+        feedback.innerHTML = `✨ 정답! 문장 완성: <em>${wordObj.sentence}</em>`;
+        setTimeout(() => {
+          advanceOrFinishEncounter(2);
+        }, 1200);
+      } else {
+        playRpgSound('wrong');
+        gameState.wrongWords.add(wordObj.id);
+        feedback.className = 'mt-4 p-3 rounded-xl text-rose-900 bg-rose-100 border border-rose-400 font-bold text-center';
+        feedback.innerHTML = `❌ 오답! 정답 단어는 <strong>${wordObj.word}</strong> 입니다.`;
+        setTimeout(() => {
+          advanceOrFinishEncounter(2);
+        }, 1600);
+      }
+    }
+
+    /* Activity 4: Reverse Meaning Quiz (Korean -> English) */
+    function renderReverseQuiz() {
+      const wordObj = gameState.currentSetWords[gameState.encounterItemIndex];
+      document.getElementById('rqProgress').innerText = `${gameState.encounterItemIndex + 1}/${gameState.currentSetWords.length}`;
+      document.getElementById('rqMeaning').innerText = wordObj.meaning;
+
+      const feedback = document.getElementById('rqFeedback');
+      feedback.className = 'mt-4 p-3 rounded-xl hidden text-sm font-bold text-center';
+
+      const otherWords = VOCAB_DATA.filter(w => w.id !== wordObj.id).map(w => w.word);
+      const choices = shuffleArray([wordObj.word, ...shuffleArray(otherWords).slice(0, 3)]);
+
+      const container = document.getElementById('rqOptions');
+      container.innerHTML = '';
+      choices.forEach(ch => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full py-3 px-4 bg-white hover:bg-amber-100 border-2 border-amber-300 font-bold rounded-xl text-slate-800 transition shadow-sm font-mono text-center text-lg';
+        btn.innerText = ch;
+        btn.onclick = () => handleReverseAnswer(ch, wordObj);
+        container.appendChild(btn);
+      });
+    }
+
+    function handleReverseAnswer(chosen, wordObj) {
+      const feedback = document.getElementById('rqFeedback');
+      feedback.classList.remove('hidden');
+
+      if (chosen.toLowerCase() === wordObj.word.toLowerCase()) {
+        playRpgSound('correct');
+        gainHeroExp(8);
+        feedback.className = 'mt-4 p-3 rounded-xl text-emerald-900 bg-emerald-100 border border-emerald-400 font-bold text-center';
+        feedback.innerHTML = `✨ 완벽합니다! <strong>${wordObj.meaning}</strong> = <strong>${wordObj.word}</strong>`;
+        setTimeout(() => {
+          advanceOrFinishEncounter(3);
+        }, 1100);
+      } else {
+        playRpgSound('wrong');
+        gameState.wrongWords.add(wordObj.id);
+        feedback.className = 'mt-4 p-3 rounded-xl text-rose-900 bg-rose-100 border border-rose-400 font-bold text-center';
+        feedback.innerHTML = `❌ 오답! 정답은 <strong>${wordObj.word}</strong> 입니다.`;
+        setTimeout(() => {
+          advanceOrFinishEncounter(3);
+        }, 1600);
+      }
+    }
+
+    /* Activity 5: Typing Practice */
+    let typingRevealedChars = 0;
+    function renderTypingPractice() {
+      const wordObj = gameState.currentSetWords[gameState.encounterItemIndex];
+      typingRevealedChars = 1; // start with first letter hint
+      document.getElementById('tpProgress').innerText = `${gameState.encounterItemIndex + 1}/${gameState.currentSetWords.length}`;
+      document.getElementById('tpMeaning').innerText = wordObj.meaning;
+      
+      const input = document.getElementById('tpInput');
+      input.value = '';
+      input.focus();
+      updateTypingLengthHint(wordObj.word);
+
+      const feedback = document.getElementById('tpFeedback');
+      feedback.className = 'mt-4 p-3 rounded-xl hidden text-sm font-bold text-center';
+    }
+
+    function updateTypingLengthHint(word) {
+      let hintStr = '';
+      for (let i = 0; i < word.length; i++) {
+        if (i < typingRevealedChars) {
+          hintStr += word[i].toUpperCase() + ' ';
+        } else {
+          hintStr += '_ ';
+        }
+      }
+      document.getElementById('tpLengthHint').innerText = hintStr;
+    }
+
+    function revealLetterHint() {
+      const wordObj = gameState.currentSetWords[gameState.encounterItemIndex];
+      if (typingRevealedChars < wordObj.word.length) {
+        typingRevealedChars++;
+        updateTypingLengthHint(wordObj.word);
+      }
+    }
+
+    function handleTypingSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('tpInput');
+      const val = input.value.trim().toLowerCase();
+      const wordObj = gameState.currentSetWords[gameState.encounterItemIndex];
+      const feedback = document.getElementById('tpFeedback');
+      feedback.classList.remove('hidden');
+
+      if (val === wordObj.word.toLowerCase()) {
+        playRpgSound('correct');
+        gainHeroExp(12);
+        feedback.className = 'mt-4 p-3 rounded-xl text-emerald-900 bg-emerald-100 border border-emerald-400 font-bold text-center';
+        feedback.innerHTML = `🎉 정확한 철자입니다! <strong>${wordObj.word}</strong> (발음: ${wordObj.word})`;
+        speakWord(wordObj.word);
+        setTimeout(() => {
+          advanceOrFinishEncounter(4);
+        }, 1200);
+      } else {
+        playRpgSound('wrong');
+        gameState.wrongWords.add(wordObj.id);
+        feedback.className = 'mt-4 p-3 rounded-xl text-rose-900 bg-rose-100 border border-rose-400 font-bold text-center';
+        feedback.innerHTML = `❌ 철자가 틀렸습니다! 정답: <strong>${wordObj.word}</strong>`;
+        setTimeout(() => {
+          advanceOrFinishEncounter(4);
+        }, 1600);
+      }
+    }
+
+    /* Advance item or transition between 5 Encounters */
+    function advanceOrFinishEncounter(stepIndex) {
+      if (gameState.encounterItemIndex < gameState.currentSetWords.length - 1) {
+        gameState.encounterItemIndex++;
+        if (stepIndex === 1) renderMeaningQuiz();
+        if (stepIndex === 2) renderFillBlankQuiz();
+        if (stepIndex === 3) renderReverseQuiz();
+        if (stepIndex === 4) renderTypingPractice();
+      } else {
+        // Step finished
+        if (stepIndex < 4) {
+          gameState.encounterStep = stepIndex + 1;
+          renderStudyEncounter();
+        } else {
+          // Completed all 5 encounters! Show victory & prompt battle
+          showVictoryModal({
+            title: '탐구 수료 (STAGE COMPLETE)',
+            subtitle: `${gameState.currentStage === 1 ? '탐색의 숲' : '시련의 동굴'} 5단계 학습을 모두 완료했습니다!`,
+            exp: 60,
+            accuracy: '100%',
+            wordCount: 5
+          });
+        }
+      }
+    }
+
+    /* =========================================================================
+       5. TIMED RPG BATTLE ARENA (Hero vs Slime, Goblin, Dragon King)
+       ========================================================================= */
+    const MONSTER_PRESETS = {
+      1: {
+        name: '포레스트 슬라임 (Slime)',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg animate-float">
+          <ellipse cx="50" cy="65" rx="36" ry="24" fill="#10b981"/>
+          <ellipse cx="50" cy="50" rx="32" ry="28" fill="#34d399"/>
+          <!-- Eyes -->
+          <circle cx="40" cy="48" r="5" fill="#064e3b"/>
+          <circle cx="60" cy="48" r="5" fill="#064e3b"/>
+          <circle cx="42" cy="46" r="2" fill="#fff"/>
+          <circle cx="62" cy="46" r="2" fill="#fff"/>
+          <!-- Smile -->
+          <path d="M44 58 Q50 63 56 58" stroke="#064e3b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>`,
+        badge: 'SLIME BATTLE',
+        qCount: 5
+      },
+      2: {
+        name: '동굴 고블린 주술사 (Goblin)',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-lg animate-float">
+          <!-- Ears -->
+          <polygon points="15,40 30,50 25,60" fill="#84cc16"/>
+          <polygon points="85,40 70,50 75,60" fill="#84cc16"/>
+          <!-- Head -->
+          <circle cx="50" cy="50" r="28" fill="#65a30d"/>
+          <!-- Eyes -->
+          <ellipse cx="42" cy="46" rx="5" ry="4" fill="#facc15"/>
+          <ellipse cx="58" cy="46" rx="5" ry="4" fill="#facc15"/>
+          <circle cx="42" cy="46" r="2" fill="#000"/>
+          <circle cx="58" cy="46" r="2" fill="#000"/>
+          <!-- Horns / Hat -->
+          <polygon points="50,15 40,32 60,32" fill="#78350f"/>
+        </svg>`,
+        badge: 'GOBLIN BATTLE',
+        qCount: 5
+      },
+      3: {
+        name: '암흑의 마왕 드래곤 (Demon King)',
+        svg: `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-xl animate-float">
+          <!-- Dragon Wings -->
+          <path d="M20 40 Q5 20 2 45 Q15 65 30 55 Z" fill="#7f1d1d"/>
+          <path d="M80 40 Q95 20 98 45 Q85 65 70 55 Z" fill="#7f1d1d"/>
+          <!-- Dragon Head -->
+          <polygon points="50,22 68,48 50,75 32,48" fill="#dc2626"/>
+          <!-- Horns -->
+          <path d="M38 30 Q28 10 20 18 Q30 25 35 34 Z" fill="#450a0a"/>
+          <path d="M62 30 Q72 10 80 18 Q70 25 65 34 Z" fill="#450a0a"/>
+          <!-- Fiery Eyes -->
+          <polygon points="42,42 46,46 38,46" fill="#fde047"/>
+          <polygon points="58,42 54,46 62,46" fill="#fde047"/>
+          <!-- Fire breath -->
+          <circle cx="50" cy="62" r="4" fill="#fbbf24"/>
+        </svg>`,
+        badge: 'FINAL BOSS',
+        qCount: 10
+      }
+    };
+
+    function startSetBattle(stageNum) {
+      initAudio();
+      gameState.battle.active = true;
+      gameState.battle.isBoss = false;
+      gameState.battle.correctCount = 0;
+      gameState.battle.currentQIndex = 0;
+      gameState.battle.monsterHp = 100;
+      gameState.battle.maxMonsterHp = 100;
+      gameState.hero.hp = gameState.hero.maxHp;
+
+      const words = VOCAB_DATA.filter(w => w.set === stageNum);
+      setupBattleQuestions(words, 5);
+      setupMonsterUI(stageNum);
+      showScreen('screenBattle');
+      loadBattleQuestion();
+    }
+
+    function startBossBattle() {
+      initAudio();
+      gameState.battle.active = true;
+      gameState.battle.isBoss = true;
+      gameState.battle.correctCount = 0;
+      gameState.battle.currentQIndex = 0;
+      gameState.battle.monsterHp = 100;
+      gameState.battle.maxMonsterHp = 100;
+      gameState.hero.hp = gameState.hero.maxHp;
+
+      // Boss tests ALL 10 words
+      setupBattleQuestions(VOCAB_DATA, 10);
+      setupMonsterUI(3);
+      showScreen('screenBattle');
+      loadBattleQuestion();
+    }
+
+    function setupMonsterUI(stageId) {
+      const preset = MONSTER_PRESETS[stageId];
+      document.getElementById('battleEnemyName').innerText = preset.name;
+      document.getElementById('battleModeBadge').innerText = preset.badge;
+      document.getElementById('monsterSvgHolder').innerHTML = preset.svg;
+      updateBattleHpBars();
+    }
+
+    function setupBattleQuestions(wordPool, count) {
+      // Create random mixed questions (Korean meaning or Sentence Fill)
+      const shuffled = shuffleArray([...wordPool]);
+      gameState.battle.questions = shuffled.slice(0, count).map(w => {
+        const type = Math.random() > 0.4 ? 'meaning' : 'fill';
+        const otherPool = VOCAB_DATA.filter(x => x.id !== w.id);
+        let choices = [];
+        if (type === 'meaning') {
+          choices = shuffleArray([w.meaning, ...w.distractors]);
+        } else {
+          choices = shuffleArray([w.word, ...shuffleArray(otherPool.map(o => o.word)).slice(0, 3)]);
+        }
+        return {
+          wordObj: w,
+          type: type,
+          choices: choices
+        };
+      });
+    }
+
+    function updateBattleHpBars() {
+      const mPct = Math.max(0, (gameState.battle.monsterHp / gameState.battle.maxMonsterHp) * 100);
+      document.getElementById('battleMonsterHpBar').style.width = `${mPct}%`;
+      document.getElementById('monsterHpLabel').innerText = `HP ${Math.round(gameState.battle.monsterHp)}/${gameState.battle.maxMonsterHp}`;
+
+      document.getElementById('heroBattleHp').innerText = Math.round(gameState.hero.hp);
+      updateHeaderStats();
+    }
+
+    function loadBattleQuestion() {
+      if (gameState.battle.timer) clearInterval(gameState.battle.timer);
+
+      const q = gameState.battle.questions[gameState.battle.currentQIndex];
+      const totalQ = gameState.battle.questions.length;
+      document.getElementById('battleQCount').innerText = `문제 ${gameState.battle.currentQIndex + 1}/${totalQ}`;
+
+      const prompt = document.getElementById('battleQuestionPrompt');
+      const subPrompt = document.getElementById('battleSubPrompt');
+
+      if (q.type === 'meaning') {
+        prompt.innerText = `"${q.wordObj.word}" 의 올바른 뜻은?`;
+        subPrompt.classList.add('hidden');
+      } else {
+        prompt.innerText = `[빈칸]에 들어갈 올바른 단어를 고르세요`;
+        subPrompt.innerText = q.wordObj.blankSentence;
+        subPrompt.classList.remove('hidden');
+      }
+
+      // Populate choices
+      const grid = document.getElementById('battleOptionsGrid');
+      grid.innerHTML = '';
+      q.choices.forEach(ch => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full py-3 px-4 bg-white hover:bg-amber-100 border-2 border-amber-400 font-bold rounded-xl text-slate-800 transition shadow-md font-sans text-base';
+        btn.innerText = ch;
+        btn.onclick = () => handleBattleChoice(ch, q);
+        grid.appendChild(btn);
+      });
+
+      // Start Countdown Timer (12 seconds)
+      startBattleTimer();
+    }
+
+    function startBattleTimer() {
+      gameState.battle.timeLeft = 12;
+      const bar = document.getElementById('battleTimerBar');
+      const text = document.getElementById('battleTimerText');
+      
+      bar.style.width = '100%';
+      text.innerText = '12s';
+
+      gameState.battle.timer = setInterval(() => {
+        gameState.battle.timeLeft -= 1;
+        text.innerText = `${gameState.battle.timeLeft}s`;
+        const pct = (gameState.battle.timeLeft / 12) * 100;
+        bar.style.width = `${pct}%`;
+
+        if (gameState.battle.timeLeft <= 0) {
+          clearInterval(gameState.battle.timer);
+          handleBattleTimeOut();
+        }
+      }, 1000);
+    }
+
+    function handleBattleTimeOut() {
+      const q = gameState.battle.questions[gameState.battle.currentQIndex];
+      gameState.wrongWords.add(q.wordObj.id);
+      playRpgSound('wrong');
+      heroTakesDamage(25, '시간 초과!');
+      nextBattleTurn();
+    }
+
+    function handleBattleChoice(chosen, q) {
+      if (gameState.battle.timer) clearInterval(gameState.battle.timer);
+
+      const isCorrect = (q.type === 'meaning' && chosen === q.wordObj.meaning) ||
+                        (q.type === 'fill' && chosen.toLowerCase() === q.wordObj.word.toLowerCase());
+
+      if (isCorrect) {
+        gameState.battle.correctCount++;
+        playRpgSound('hit');
+        animateHeroAttack();
+        const dmg = 100 / gameState.battle.questions.length;
+        monsterTakesDamage(dmg);
+      } else {
+        gameState.wrongWords.add(q.wordObj.id);
+        playRpgSound('wrong');
+        heroTakesDamage(20, '오답 피격!');
+      }
+
+      setTimeout(() => {
+        nextBattleTurn();
+      }, 1000);
+    }
+
+    function animateHeroAttack() {
+      const hero = document.getElementById('heroSprite');
+      const monster = document.getElementById('monsterSprite');
+      hero.classList.add('animate-slash');
+      monster.classList.add('animate-shake');
+      setTimeout(() => {
+        hero.classList.remove('animate-slash');
+        monster.classList.remove('animate-shake');
+      }, 500);
+    }
+
+    function monsterTakesDamage(dmg) {
+      gameState.battle.monsterHp = Math.max(0, gameState.battle.monsterHp - dmg);
+      updateBattleHpBars();
+      showDamagePopup('monsterDamagePopupContainer', `-${Math.round(dmg)}`, '#ef4444');
+    }
+
+    function heroTakesDamage(dmg, reason) {
+      gameState.hero.hp = Math.max(0, gameState.hero.hp - dmg);
+      updateBattleHpBars();
+      const hero = document.getElementById('heroSprite');
+      hero.classList.add('animate-hurt');
+      setTimeout(() => hero.classList.remove('animate-hurt'), 500);
+      showDamagePopup('heroDamagePopupContainer', `-${dmg} ${reason}`, '#f43f5e');
+
+      if (gameState.hero.hp <= 0) {
+        // Hero revived with half HP
+        gameState.hero.hp = Math.floor(gameState.hero.maxHp * 0.5);
+        updateBattleHpBars();
+      }
+    }
+
+    function showDamagePopup(containerId, text, color) {
+      const container = document.getElementById(containerId);
+      const span = document.createElement('div');
+      span.className = 'dmg-popup text-lg font-mono';
+      span.style.color = color;
+      span.innerText = text;
+      container.appendChild(span);
+      setTimeout(() => span.remove(), 900);
+    }
+
+    function nextBattleTurn() {
+      if (gameState.battle.monsterHp <= 0 || gameState.battle.currentQIndex >= gameState.battle.questions.length - 1) {
+        finishBattle();
+      } else {
+        gameState.battle.currentQIndex++;
+        loadBattleQuestion();
+      }
+    }
+
+    function finishBattle() {
+      if (gameState.battle.timer) clearInterval(gameState.battle.timer);
+      gameState.battle.active = false;
+      const total = gameState.battle.questions.length;
+      const accuracy = Math.round((gameState.battle.correctCount / total) * 100);
+      const expGained = gameState.battle.isBoss ? 100 : 50;
+      gainHeroExp(expGained);
+      playRpgSound('levelup');
+
+      showVictoryModal({
+        title: gameState.battle.isBoss ? '마왕 토벌 완료 (BOSS CLEAR)!' : '전투 승리 (BATTLE CLEAR)!',
+        subtitle: `${accuracy}%의 정답률로 몬스터를 물리치고 지혜를 증명했습니다!`,
+        exp: expGained,
+        accuracy: `${accuracy}%`,
+        wordCount: total
+      });
+    }
+
+    /* =========================================================================
+       6. VICTORY MODAL & WORD BANK / REVIEW (오답노트)
+       ========================================================================= */
+    function showVictoryModal({ title, subtitle, exp, accuracy, wordCount }) {
+      document.getElementById('vicTitle').innerText = title;
+      document.getElementById('vicSubtitle').innerText = subtitle;
+      document.getElementById('vicExpGained').innerText = `+${exp} EXP`;
+      document.getElementById('vicAccuracy').innerText = accuracy;
+      document.getElementById('vicWordCount').innerText = `${wordCount} 단어`;
+      document.getElementById('modalVictory').classList.remove('hidden');
+    }
+
+    function closeVictoryModal() {
+      document.getElementById('modalVictory').classList.add('hidden');
+      goToStageSelect();
+    }
+
+    /* Word Bank & Review Sanctuary */
+    let currentBankTab = 'all';
+
+    function openWordBank() {
+      document.getElementById('modalWordBank').classList.remove('hidden');
+      document.getElementById('wrongCountBadge').innerText = gameState.wrongWords.size;
+      renderWordBankList();
+    }
+
+    function closeWordBank() {
+      document.getElementById('modalWordBank').classList.add('hidden');
+    }
+
+    function switchWordBankTab(tab) {
+      currentBankTab = tab;
+      const tabAll = document.getElementById('tabAllWords');
+      const tabWrong = document.getElementById('tabWrongWords');
+      if (tab === 'all') {
+        tabAll.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-900';
+        tabWrong.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-200 text-slate-700 flex items-center space-x-1';
+      } else {
+        tabAll.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-200 text-slate-700';
+        tabWrong.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-500 text-white flex items-center space-x-1';
+      }
+      renderWordBankList();
+    }
+
+    function renderWordBankList() {
+      const container = document.getElementById('wordBankList');
+      container.innerHTML = '';
+
+      let wordsToDisplay = VOCAB_DATA;
+      if (currentBankTab === 'wrong') {
+        wordsToDisplay = VOCAB_DATA.filter(w => gameState.wrongWords.has(w.id));
+      }
+
+      if (wordsToDisplay.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 text-slate-500">
+            <i class="fa-regular fa-face-smile text-4xl mb-2 text-amber-500"></i>
+            <p class="text-sm font-bold">오답이 없습니다! 아주 훌륭합니다, 용사님!</p>
+          </div>
+        `;
+        return;
+      }
+
+      wordsToDisplay.forEach(item => {
+        const isWrong = gameState.wrongWords.has(item.id);
+        const card = document.createElement('div');
+        card.className = `p-3.5 rounded-xl border bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm ${isWrong ? 'border-rose-400 bg-rose-50/40' : 'border-amber-200'}`;
+
+        const levelBadge = item.level ? `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded font-mono">${item.level}</span>` : '';
+        const wfBadge = item.wordFamily ? `<span class="bg-purple-100 text-purple-800 text-[10px] px-1.5 py-0.5 rounded">어족: ${item.wordFamily}</span>` : '';
+        const wrongBadge = isWrong ? `<span class="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">오답 복습 대상</span>` : '';
+
+        card.innerHTML = `
+          <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-lg text-slate-900">${item.word}</span>
+              ${levelBadge}
+              ${wfBadge}
+              ${wrongBadge}
+            </div>
+            <div class="text-xs text-amber-950 font-semibold">뜻: ${item.meaning}</div>
+            <div class="text-xs text-slate-600 font-mono italic">예: ${item.sentence}</div>
+          </div>
+          <div class="flex items-center space-x-2 self-end sm:self-center">
+            <button onclick="speakWord('${item.word}')" class="px-2.5 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-lg text-xs font-bold flex items-center space-x-1">
+              <i class="fa-solid fa-volume-high"></i>
+              <span>발음</span>
+            </button>
+            ${isWrong ? `
+              <button onclick="removeWrongWord(${item.id})" class="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 rounded-lg text-xs font-bold" title="오답 목록에서 제거">
+                <i class="fa-solid fa-check mr-1"></i>마스터 완료
+              </button>
+            ` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function removeWrongWord(wordId) {
+      gameState.wrongWords.delete(wordId);
+      document.getElementById('wrongCountBadge').innerText = gameState.wrongWords.size;
+      playRpgSound('correct');
+      renderWordBankList();
+    }
+
+    /* Helper Utilities */
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    /* Window initialization */
+    window.onload = function() {
+      updateHeaderStats();
+    };
+  </script>
+</body>
+</html>
