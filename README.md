@@ -40,7 +40,7 @@
 
 ### 2-2. Selected Words (10–20)
 
-`[act]`, `[leave]`, `[produce]`, `[subject]`, `[mind]`, `[delight]`, `[confidence]`, `[satisfy]`, `[embarrass]`, `[frustrate]`
+`act`, `leave`, `produce`, `subject`, `mind`, `delight`, `confidence`, `satisfy`, `embarrass`, `frustrate`
 
 ### 2-3. Why We Chose These Words
 
