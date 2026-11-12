@@ -3,8 +3,7 @@
 ## 1. Group Information
 - Group: G1
 - Members (역할): 고나연(코더), 탁서영(코더), 옥예서(리드미), 문채원(리드미)
-- Project link: (e.g., [https://github.com/mk316](https://github.com/mk316))
-
+- Project link: (https://github.com/mcw4793/G1_miniproject)
 ## 2. Target Learners
 Who is this app designed for? 중1
 
