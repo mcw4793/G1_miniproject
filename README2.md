@@ -2,8 +2,9 @@
 
 ## 1. Group Information
 - Group: G1
-- Members (역할): 고나연(코더), 탁서영(코더), 옥예서(리드미), 문채원(리드미)
+- Members (역할): 고나연(), 탁서영(), 옥예서(코더), 문채원()
 - Project link: (https://github.com/mcw4793/G1_miniproject)
+- 
 ## 2. Target Learners
 Who is this app designed for? 중1
 
@@ -11,27 +12,29 @@ Who is this app designed for? 중1
 What should learners practice or learn? 뜻, 철자
 
 ## 4. What We Updated
-Write what you changed from the first version. Use lists.
-Expanded the vocabulary list to 3,000 essential English words.
-Improved audio functions and sound effects.
-Added background music.
-Added hints to help learners answer questions.
-Improved the mobile interface for better accessibility.
-Enhanced the game system with stages, boss battles, and rewards.
+초기 버전에서 사용자 경험(UX)과 학습 효과를 높이기 위해 다음과 같이 대대적으로 개편함:
+- 교육과정 필수 어휘 데이터를 활용하여 3,000개 영단어 데이터셋(`Voca_3000.csv`)을 연동 및 정비함.
+- 기존의 단조로운 학습에서 벗어나 **플래시카드 ➔ 객관식 퀴즈 ➔ 서술형 스펠링 테스트 ➔ 타임어택 배틀**로 이어지는 4단계 페다고지 흐름으로 재구성함.
+- 객관식 및 서술형 퀴즈에 **실시간 진행도(맞춘 문제/총 푼 문제)**와 **오답 시 재도전 기회(1회 연장)**를 추가하여 학습자의 편의성을 높임.
+- 타임어택 모드에서 정답을 맞힐 때마다 **제한 시간(10초)이 실시간으로 리셋**되는 스릴 넘치는 스피드 게임 시스템을 구축함.
+- 언제든 전체 어휘를 검색하고 확인할 수 있는 **전체 단어장 목록 보기** 기능을 추가함.
 
-## 5. Main Features
-Three-step vocabulary learning: Flashcards, multiple-choice questions, and spelling practice.
-Example sentences: Learn vocabulary in context through example sentences.
-RPG-style learning system: Progress through 100 stages and challenge 10 boss monsters.
-Wrong Wordbook: Review incorrectly answered vocabulary.
-Audio support: Listen to English word pronunciation and use background music and sound effectss
+## 5. Main Features (핵심 기능)
+1. **플래시카드 학습**: 카드를 뒤집어 가며 영단어와 뜻을 직관적으로 암기하고, 전체 단어장 목록을 통해 3,000개 단어를 한눈에 확인함.
+2. **객관식 퀴즈**: 영단어를 보고 알맞은 한국어 뜻을 4지 선다형 보기 중에서 맞히는 단계임. (정답/오답 피드백 및 재도전 기회 제공)
+3. **서술형 스펠링 테스트**: 한국어 뜻과 첫 글자 힌트를 참고하여 올바른 영단어 철자를 직접 타이핑하며 정확한 스펠링을 연습하는 단계임.
+4. **타임어택 배틀**: 제한 시간 10초 동안 최대한 많은 문제를 풀며 점수를 겨루는 스피드 게임임. (정답 시 시간 리셋, 오답 또는 시간 초과 시 즉시 종료)
+5. **전체 단어장 조회**: 3,000개의 전체 어휘 데이터셋을 표 형식으로 펼쳐볼 수 있음.
 
 ## 6. Vocabulary Data
-The app uses the 3,000 essential English words from the curriculum vocabulary dataset. Each word includes its English spelling, Korean meaning, word variations, difficulty level, and example sentence..
-[Voca_3000.csv](https://github.com/user-attachments/files/35013428/Voca_3000.csv)
+- **데이터셋**: 중학교 교육과정 필수 어휘 3,000개 (`Voca_3000.csv`)
+- **구조**: 2번째 열(영단어), 4번째 열(한국어 뜻) 등 학습에 최적화된 컬럼 구조로 정제되어 연동됨.
+- [Voca_3000.csv](https://github.com/user-attachments/files/35015766/Voca_3000.csv)
 
 ## 7. What We Learned Through This Group Activity
-Through this group activity, we learned how to improve an existing vocabulary app and organize a large vocabulary dataset. We also experienced how to connect vocabulary data to an interactive learning application. By working together, we improved our collaboration and problem-solving skills.
+- 기존 웹 애플리케이션의 구조를 분석하고, 사용자의 피드백을 반영하여 UI/UX와 상호작용 로직을 개선하는 법을 배움.
+- 대규모 어휘 데이터셋(`.csv`)을 파이썬(Pandas)과 스트림릿(Streamlit)을 통해 인터랙티브한 웹 화면으로 구현하는 역량을 키움.
+- 팀원 간의 긴밀한 협업과 역할 분담을 통해 실무적인 문제 해결 능력을 향상시킬 수 있었음.
 
 ## 8. Streamlit App
-[Open our Streamlit app](YOUR_STREAMLIT_URL)
+- [G1 Vocabulary App 바로가기][(https://g1wordgame.streamlit.app/)
