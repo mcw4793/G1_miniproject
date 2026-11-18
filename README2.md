@@ -2,7 +2,7 @@
 
 ## 1. Group Information
 - Group: G1
-- Members (역할): 고나연(), 탁서영(), 옥예서(코더), 문채원()
+- Members (역할): 고나연(발표자), 탁서영(발표자), 옥예서(코더), 문채원(README 담당)
 - Project link: (https://github.com/mcw4793/G1_miniproject)
   
 ## 2. Target Learners
