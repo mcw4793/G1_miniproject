@@ -4,7 +4,7 @@
 - Group: G1
 - Members (역할): 고나연(), 탁서영(), 옥예서(코더), 문채원()
 - Project link: (https://github.com/mcw4793/G1_miniproject)
-- 
+  
 ## 2. Target Learners
 Who is this app designed for? 중1
 
@@ -37,4 +37,4 @@ What should learners practice or learn? 뜻, 철자
 - 팀원 간의 긴밀한 협업과 역할 분담을 통해 실무적인 문제 해결 능력을 향상시킬 수 있었음.
 
 ## 8. Streamlit App
-- [G1 Vocabulary App 바로가기][(https://g1wordgame.streamlit.app/)
+-(https://g1wordgame.streamlit.app/)
