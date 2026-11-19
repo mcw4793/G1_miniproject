@@ -13,18 +13,12 @@ st.set_page_config(
     layout="centered"
 )
 
-# 1. 브라우저 내장 Web Speech API를 이용한 TTS 버튼 함수 (별도 패키지 설치 불필요)
+# 1. 브라우저 내장 음성 중 실제 영어 원어민(US/UK) 음성을 선택해 재생하는 TTS 함수
 def render_tts_button(word: str, key: str):
-    safe_word = word.replace("'", "\\'").replace('"', '\\"')
+    safe_word = word.replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
     html_code = f"""
     <div style="display: flex; justify-content: center; margin: 6px 0;">
-        <button id="tts_btn_{key}" onclick="
-            window.speechSynthesis.cancel();
-            var msg = new SpeechSynthesisUtterance('{safe_word}');
-            msg.lang = 'en-US';
-            msg.rate = 0.95;
-            window.speechSynthesis.speak(msg);
-        " style="
+        <button id="tts_btn_{key}" onclick="playNativeTTS('{safe_word}')" style="
             background-color: #f0f4f8;
             border: 1px solid #cbd5e1;
             border-radius: 20px;
@@ -35,9 +29,69 @@ def render_tts_button(word: str, key: str):
             cursor: pointer;
             transition: all 0.2s;
         " onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f0f4f8'">
-            🔊 발음 듣기 ({word})
+            🔊 원어민 발음 듣기 ({word})
         </button>
     </div>
+
+    <script>
+    function getNativeEnglishVoice() {{
+        const voices = window.speechSynthesis.getVoices();
+        if (!voices || voices.length === 0) return null;
+
+        // 1순위: 자연스러운 고품질 영어 원어민 음성 우선 탐색
+        const preferredNames = [
+            'Google US English',
+            'Microsoft Aria Online',
+            'Microsoft Jenny Online',
+            'Microsoft Guy Online',
+            'Microsoft Zira',
+            'Microsoft David',
+            'Samantha',
+            'Alex',
+            'Daniel',
+            'Google UK English Female',
+            'Google UK English Male'
+        ];
+
+        for (const name of preferredNames) {{
+            const found = voices.find(v => v.name.includes(name));
+            if (found) return found;
+        }}
+
+        // 2순위: 미국 영어(en-US) 원어민 음성
+        const usVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
+        if (usVoice) return usVoice;
+
+        // 3순위: 기타 영어권(en-GB, en-AU, en-CA 등) 원어민 음성
+        const anyEnVoice = voices.find(v => v.lang.toLowerCase().startsWith('en'));
+        return anyEnVoice || null;
+    }}
+
+    // 크롬 등에서 비동기로 음성 목록이 로드되는 경우 대비
+    if (typeof window.speechSynthesis !== 'undefined') {{
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = function() {{
+            window.speechSynthesis.getVoices();
+        }};
+    }}
+
+    function playNativeTTS(text) {{
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        const nativeVoice = getNativeEnglishVoice();
+
+        if (nativeVoice) {{
+            msg.voice = nativeVoice;
+            msg.lang = nativeVoice.lang;
+        }} else {{
+            msg.lang = 'en-US';
+        }}
+
+        msg.rate = 0.92;  // 학습용으로 또박또박 들리는 원어민 속도
+        msg.pitch = 1.0;
+        window.speechSynthesis.speak(msg);
+    }}
+    </script>
     """
     components.html(html_code, height=45)
 
@@ -131,7 +185,7 @@ else:
                 )
 
         # ---------------------------------------------------------
-        # 2) 플래시카드 학습 (Day별 분할 + 카드 직접 클릭 뒤집기 + TTS)
+        # 2) 플래시카드 학습 (Day별 분할 + 카드 직접 클릭 뒤집기 + 원어민 TTS)
         # ---------------------------------------------------------
         elif menu == "🃏 플래시카드 학습":
             st.header("🃏 플래시카드 단어 암기")
@@ -192,7 +246,7 @@ else:
                 st.session_state.fc_flipped = not st.session_state.fc_flipped
                 st.rerun()
 
-            # TTS 발음 듣기 버튼
+            # 원어민 TTS 발음 듣기 버튼
             render_tts_button(word, key=f"fc_{selected_day_idx}_{idx}")
 
             # 이전 / 다음 카드 이동 버튼
@@ -221,11 +275,11 @@ else:
                 )
 
         # ---------------------------------------------------------
-        # 3) 객관식 퀴즈 (+ TTS)
+        # 3) 객관식 퀴즈 (+ 원어민 TTS)
         # ---------------------------------------------------------
         elif menu == "❓ 객관식 퀴즈":
             st.header("❓ 객관식 퀴즈 (영단어 ➔ 뜻)")
-            st.write("제시된 영단어와 발음을 확인하고 알맞은 뜻을 고르세요.")
+            st.write("제시된 영단어와 원어민 발음을 확인하고 알맞은 뜻을 고르세요.")
 
             if "q_total" not in st.session_state:
                 st.session_state.q_total = 0
@@ -293,11 +347,11 @@ else:
                     st.rerun()
 
         # ---------------------------------------------------------
-        # 4) 서술형 스펠링 테스트 (+ TTS)
+        # 4) 서술형 스펠링 테스트 (+ 원어민 TTS)
         # ---------------------------------------------------------
         elif menu == "✍️ 서술형 스펠링 테스트":
             st.header("✍️ 서술형 스펠링 테스트 (뜻 ➔ 영단어)")
-            st.write("제시된 한국어 뜻과 발음 힌트를 듣고 올바른 영단어 철자를 입력해 보세요.")
+            st.write("제시된 한국어 뜻과 원어민 발음 힌트를 듣고 올바른 영단어 철자를 입력해 보세요.")
 
             if "subj_total" not in st.session_state:
                 st.session_state.subj_total = 0
@@ -327,7 +381,7 @@ else:
                 if st.checkbox("💡 첫 글자 힌트 보기"):
                     st.info(f"힌트: {st.session_state.subj_hint}")
             with col_h2:
-                if st.checkbox("🔊 발음 힌트 듣기"):
+                if st.checkbox("🔊 원어민 발음 힌트 듣기"):
                     render_tts_button(target_word, key=f"subj_hint_{st.session_state.subj_q_id}")
 
             user_input = st.text_input(
